@@ -4,14 +4,20 @@ module Error
   module ErrorHandler
     def self.included(clazz)
       clazz.class_eval do
-        rescue_from ActiveRecord::RecordNotFound, with: :record_not_found
+        rescue_from ActiveRecord::RecordNotFound do |e|
+          respond(:record_not_found, 404, e.to_s)
+        end
+        rescue_from StandardError do |e|
+          respond(:record_not_found, 500, e.to_s)
+        end
       end
     end
 
     private
 
-    def record_not_found(_e)
-      render json: { error: 'Record not found'}, status: 404
+    def respond(_error, _status, _message)
+      json = Helpers::Render.json(_error, _status, _message)
+      render json: json, status: status
     end
   end
 end
